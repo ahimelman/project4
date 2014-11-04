@@ -1,0 +1,19 @@
+spawn: pcb
+do_mbox: bounded buffer, in book
+
+just have processes in kernel
+kernel has fixed array of PCBs, search through 
+pid can be monotonically increasing, or index of PCB in array
+
+kernel.c has things to allocate stack, but it's not entirely right (stack_new)
+
+message boxes: bounded buffer problem in book
+create array, semaphore, with each message box
+
+KEYBOARD INPUT
+- putchar is producer, if buffer is full, discard what you're trying to put in, don't block
+- getchar is consumer
+
+when kill process, have to decrement ref counts in message boxes
+
+wait: condition variables
