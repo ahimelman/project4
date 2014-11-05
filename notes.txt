@@ -17,3 +17,16 @@ KEYBOARD INPUT
 when kill process, have to decrement ref counts in message boxes
 
 wait: condition variables
+
+Design Review:
+
+1) Semaphore to count # of items in buffer, need lock to enter critical
+section / insert item
+
+2) Spawn: have to implement do_spawn. look up process by name in ramdisk.h,
+get pid by scanning for first open entry in pcb[], call stack_new, call ramdisk_find on file name (return Process) and set entry point in pcb to that, increment total_ready_priority by 1 ?,put (node_t) process on ready_queue 
+
+3) wait: set condition_wait on condition, how to change pcb?
+
+4) kill: search all queues to find process and remove, then call do_exit, what
+does it mean to reclaim memory?
