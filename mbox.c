@@ -21,10 +21,6 @@ typedef struct
   semaphore_t full_count;
   semaphore_t empty_count;
   lock_t lock;
-  enum {
-    OPEN,
-    CLOSED
-  } status;
 } MessageBox;
 
 
@@ -66,15 +62,13 @@ mbox_t do_mbox_open(const char *name)
   
     for (i = 0; i < MAX_MBOXEN; i++) {
         if (same_string(MessageBoxen[i].name, name)) { 
-            MessageBoxen[i].status = OPEN;
             MessageBoxen[i].usage_count++;
             return i; 
         }
     }
   
     for (i = 0; i < MAX_MBOXEN; i++) {
-        if (MessageBoxen[i].status == CLOSED) {
-            MessageBoxen[i].status = OPEN;
+        if (MessageBoxen[i].usage_count == 0) {
             MessageBoxen[i].usage_count++;
             return i;
         }
@@ -88,7 +82,6 @@ mbox_t do_mbox_open(const char *name)
 void do_mbox_close(mbox_t mbox)
 {
     (void)mbox;
-    MessageBoxen[mbox].status = CLOSED;
     MessageBoxen[mbox].usage_count--;
 }
 
