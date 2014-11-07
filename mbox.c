@@ -84,6 +84,8 @@ mbox_t do_mbox_open(const char *name)
 void do_mbox_close(mbox_t mbox)
 {
     (void)mbox;
+    semaphore_init(&MessageBoxen[mbox].full_count, 0);
+    semaphore_init(&MessageBoxen[mbox].empty_count, MAX_MBOX_LENGTH);
     MessageBoxen[mbox].usage_count--;
 }
 
