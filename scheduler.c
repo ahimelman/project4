@@ -236,6 +236,7 @@ void do_exit()
 {
     enter_critical();
     current_running->status = EXITED;
+    printf(0,0,"exited");
     scheduler_entry();
     /* No need for leave_critical() since scheduler_entry() never returns */
 }

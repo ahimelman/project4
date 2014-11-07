@@ -420,6 +420,7 @@ static int do_spawn(const char *filename)
   // todo: fill this in
   pcb_idx = search_pcb();
 
+  //printf(0, 0, "pcb_idx: %d", pcb_idx);
   if (pcb_idx == -1) 
     return -2;
 

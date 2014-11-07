@@ -1,16 +1,30 @@
 #include "common.h"
 #include "mbox.h"
+#include "sync.h"
+#include "util.h"
 
+#define BUFFER_LENGTH (MAX_MBOX_LENGTH + 1)
 
 typedef struct
 {
   // Fill this in
+  char msg[MAX_MESSAGE_LENGTH];
 } Message;
 
 typedef struct
 {
   char name[MBOX_NAME_LENGTH];
   // Fill this in
+  int usage_count;
+  Message messages[BUFFER_LENGTH];
+  int start, end;
+  semaphore_t full_count;
+  semaphore_t empty_count;
+  lock_t lock;
+  enum {
+    OPEN,
+    CLOSED
+  } status;
 } MessageBox;
 
 
@@ -22,8 +36,17 @@ static MessageBox MessageBoxen[MAX_MBOXEN];
  */
 void init_mbox(void)
 {
+  int i;
   (void) MessageBoxen;
   // Fill this in
+  for (i = 0; i < MAX_MBOXEN; i++) {
+    MessageBoxen[i].usage_count = 0; 
+    MessageBoxen[i].start = 0; 
+    MessageBoxen[i].end = 0;
+    semaphore_init(&MessageBoxen[i].full_count, 0);
+    semaphore_init(&MessageBoxen[i].empty_count, MAX_MBOX_LENGTH);
+    lock_init(&MessageBoxen[i].lock); 
+  }
 }
 
 /* Opens the mailbox named 'name', or
@@ -38,17 +61,35 @@ void init_mbox(void)
  */
 mbox_t do_mbox_open(const char *name)
 {
-  (void)name;
-  // fill this in
-  return -1;
+    int i;
+    (void)name;
+  
+    for (i = 0; i < MAX_MBOXEN; i++) {
+        if (same_string(MessageBoxen[i].name, name)) { 
+            MessageBoxen[i].status = OPEN;
+            MessageBoxen[i].usage_count++;
+            return i; 
+        }
+    }
+  
+    for (i = 0; i < MAX_MBOXEN; i++) {
+        if (MessageBoxen[i].status == CLOSED) {
+            MessageBoxen[i].status = OPEN;
+            MessageBoxen[i].usage_count++;
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 /* Closes a message box
  */
 void do_mbox_close(mbox_t mbox)
 {
-  (void)mbox;
-  // fill this in
+    (void)mbox;
+    MessageBoxen[mbox].status = CLOSED;
+    MessageBoxen[mbox].usage_count--;
 }
 
 /* Determine if the given
@@ -62,7 +103,7 @@ int do_mbox_is_full(mbox_t mbox)
 {
   (void)mbox;
   // fill this in
-  return 1;
+  return ((MessageBoxen[mbox].end + 1) % BUFFER_LENGTH) == MessageBoxen[mbox].start;
 }
 
 /* Enqueues a message onto
@@ -83,6 +124,13 @@ void do_mbox_send(mbox_t mbox, void *msg, int nbytes)
   (void)msg;
   (void)nbytes;
   // fill this in
+  MessageBox mb = MessageBoxen[mbox];
+  semaphore_down(&mb.empty_count);
+  lock_acquire(&mb.lock);
+  bcopy(msg, mb.messages[mb.end].msg, nbytes);
+  mb.end = (mb.end + 1) % BUFFER_LENGTH;
+  lock_release(&mb.lock);
+  semaphore_up(&mb.full_count);
 }
 
 /* Receives a message from the
@@ -104,6 +152,13 @@ void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
   (void)msg;
   (void)nbytes;
   // fill this in
+  MessageBox mb = MessageBoxen[mbox];
+  semaphore_down(&mb.full_count);
+  lock_acquire(&mb.lock);
+  bcopy(mb.messages[mb.start].msg, msg, nbytes);
+  mb.start = (mb.start + 1) % BUFFER_LENGTH;
+  lock_release(&mb.lock);
+  semaphore_up(&mb.empty_count);
 }
 
 /* Returns the number of processes that have
@@ -112,7 +167,6 @@ void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
 unsigned int do_mbox_usage_count(mbox_t mbox)
 {
   (void)mbox;
-  return 0;
-  // fill this in
+  return MessageBoxen[mbox].usage_count;
 }
 
