@@ -69,6 +69,8 @@ mbox_t do_mbox_open(const char *name)
   
     for (i = 0; i < MAX_MBOXEN; i++) {
         if (MessageBoxen[i].usage_count == 0) {
+            int n = strlen((char*)name);
+            bcopy((char*)name, MessageBoxen[i].name, (n*sizeof(char)));
             MessageBoxen[i].usage_count++;
             return i;
         }
@@ -146,7 +148,7 @@ void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
   (void)nbytes;
   // fill this in
   MessageBox mb = MessageBoxen[mbox];
-  //asm("xchg %bx, %bx");
+  asm("xchg %bx, %bx");
   semaphore_down(&mb.full_count);
   lock_acquire(&mb.lock);
   bcopy(mb.messages[mb.start].msg, msg, nbytes);

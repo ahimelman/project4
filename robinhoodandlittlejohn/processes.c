@@ -13,6 +13,7 @@ void init(void)
 
 void RobinHood(void)
 {
+  //asm("xchg %bx, %bx");
   mbox_t pub = mbox_open("Robin-Hood-Publish-PID");
   pid_t myPid = getpid();
 
@@ -31,13 +32,15 @@ void RobinHood(void)
     mbox_recv(sub, &john, sizeof(pid_t));
 
     printf(1,1, "Robin Hood(%d): Rob from the rich                   ", myPid);
-
+    asm("xchg %bx, %bx");
     wait(john);
 
     printf(1,1, "Robin Hood(%d): I'm coming to save you, Little John!", myPid);
 
     sleep(1000);
     spawn("LittleJohn");
+    ASSERT( spawn("LittleJohn") >= 0 );
+
     mbox_send(pub, &myPid, sizeof(pid_t));
   }
 }
