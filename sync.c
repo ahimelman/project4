@@ -178,7 +178,6 @@ void semaphore_up(semaphore_t * s)
 void semaphore_down(semaphore_t * s)
 {
   enter_critical();
-
   if( s->value < 1 )
     block( &s->wait_queue );
   else

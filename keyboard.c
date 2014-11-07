@@ -276,7 +276,7 @@ void keyboard_init(void) {
 int do_getchar()
 {
   char c;
-  do_mbox_recv(keyboard_mbox, &c, sizeof(unsigned char));
+  do_mbox_send(keyboard_mbox, &c, sizeof(unsigned char));
   return (int)c;
 }
 
@@ -286,6 +286,5 @@ int do_getchar()
 static void putchar(struct character *c) {
   (void)c;
   //your code here
-  asm("xchg %bx, %bx");
-  do_mbox_send(keyboard_mbox, &c->character, sizeof(unsigned char)); 
+  do_mbox_recv(keyboard_mbox, &c->character, sizeof(unsigned char)); 
 }

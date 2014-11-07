@@ -28,6 +28,7 @@ void init_process(void)
     printf(21, 1, "$                           ");
 
     char buffer[100];
+    asm("xchg %bx, %bx");
     get_line(buffer, 100);
 
     pid_t result = spawn(buffer);

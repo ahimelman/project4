@@ -146,6 +146,7 @@ void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
   (void)nbytes;
   // fill this in
   MessageBox mb = MessageBoxen[mbox];
+  //asm("xchg %bx, %bx");
   semaphore_down(&mb.full_count);
   lock_acquire(&mb.lock);
   bcopy(mb.messages[mb.start].msg, msg, nbytes);
