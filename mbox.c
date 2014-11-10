@@ -147,7 +147,7 @@ void do_mbox_send(mbox_t mbox, void *msg, int nbytes)
  */
 void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
 {
-  asm("xchg %bx,%bx");  
+  //asm("xchg %bx,%bx");  
   (void)mbox;
   (void)msg;
   (void)nbytes;

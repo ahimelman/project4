@@ -39,7 +39,6 @@ void RobinHood(void)
 
     sleep(1000);
     spawn("LittleJohn");
-    ASSERT( spawn("LittleJohn") >= 0 );
 
     mbox_send(pub, &myPid, sizeof(pid_t));
   }
@@ -62,9 +61,8 @@ void LittleJohn(void)
   for(;;)
   {
     pid_t aramis;
-    asm("xchg %bx, %bx");
     mbox_recv(sub, &aramis, sizeof(pid_t));
-
+    ASSERT(0);
     printf(2,1, "Little John(%d): and give to the poor!         ", myPid);
 
     wait(aramis);
@@ -81,6 +79,8 @@ void LittleJohn(void)
 
 void Sheriff(void)
 {
+
+  //printf(11, 0, "in Sheriff!!!");
   uint32_t myRand = get_timer();
 
   pid_t myPid = getpid();
