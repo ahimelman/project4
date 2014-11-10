@@ -32,7 +32,7 @@ void RobinHood(void)
     mbox_recv(sub, &john, sizeof(pid_t));
 
     printf(1,1, "Robin Hood(%d): Rob from the rich                   ", myPid);
-    asm("xchg %bx, %bx");
+    //asm("xchg %bx, %bx");
     wait(john);
 
     printf(1,1, "Robin Hood(%d): I'm coming to save you, Little John!", myPid);
@@ -62,6 +62,7 @@ void LittleJohn(void)
   for(;;)
   {
     pid_t aramis;
+    asm("xchg %bx, %bx");
     mbox_recv(sub, &aramis, sizeof(pid_t));
 
     printf(2,1, "Little John(%d): and give to the poor!         ", myPid);
