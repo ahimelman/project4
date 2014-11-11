@@ -288,6 +288,9 @@ void block(node_t * wait_queue)
 
 void unblock(pcb_t * task)
 {
+    printf(15, 0, "UNBLOCK");
+    asm("xchg %bx, %bx");
+    printf(15, 0, "                    ");
     ASSERT(disable_count);
     task->status = READY;
     if( ENABLE_PRIORITIES )

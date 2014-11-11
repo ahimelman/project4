@@ -414,6 +414,7 @@ static int search_pcb(void)
 
 static int do_spawn(const char *filename)
 {
+  asm("xchg %bx, %bx");  
   int pcb_idx;
   Process rdisk_find_status;
   (void)filename;

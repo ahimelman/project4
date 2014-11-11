@@ -10,7 +10,7 @@
 #include "sync.h"
 #include "util.h"
 #include "kernel.h"
-
+#include "printf.h"
 static int check_for_deadlock(pcb_t *owner, pcb_t *src)
 {
   int timeout;
@@ -27,7 +27,9 @@ static int check_for_deadlock(pcb_t *owner, pcb_t *src)
 static pcb_t * unblock_one(node_t * wait_queue)
 {
     pcb_t *p;
-
+    printf(17, 0, "UNBLOCK_ONE");
+    asm("xchg %bx, %bx");
+    printf(17, 0, "                 ");
     ASSERT(disable_count);
     p = (pcb_t *) queue_get(wait_queue);
     if (NULL != p) {
@@ -178,8 +180,13 @@ void semaphore_up(semaphore_t * s)
 void semaphore_down(semaphore_t * s)
 {
   enter_critical();
-  if( s->value < 1 )
-    block( &s->wait_queue );
+  printf(13, 0, "SEMAPHORE DOWN, VALUE = %d;", s->value);
+  asm("xchg %bx, %bx");
+  if( s->value < 1 ) {
+    printf(14, 0, "ABOUT TO BLOCK!");
+    asm("xchg %bx, %bx");
+    printf(14, 0, "                 ");
+    block( &s->wait_queue );}
   else
     s->value--;
 

@@ -2,6 +2,7 @@
 #include "mbox.h"
 #include "sync.h"
 #include "util.h"
+#include "printf.h"
 
 #define BUFFER_LENGTH (MAX_MBOX_LENGTH + 1)
 
@@ -125,10 +126,10 @@ void do_mbox_send(mbox_t mbox, void *msg, int nbytes)
   // fill this in
   MessageBox mb = MessageBoxen[mbox];
   semaphore_down(&mb.empty_count);
-  lock_acquire(&mb.lock);
+  //lock_acquire(&mb.lock);
   bcopy(msg, mb.messages[mb.end].msg, nbytes);
   mb.end = (mb.end + 1) % BUFFER_LENGTH;
-  lock_release(&mb.lock);
+  //lock_release(&mb.lock);
   semaphore_up(&mb.full_count);
 }
 
@@ -154,12 +155,18 @@ void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
   // fill this in
   MessageBox mb = MessageBoxen[mbox];
   //asm("xchg %bx, %bx");
+  printf(10, 0, "%d", mb.full_count.value);
+  printf(11, 0, "%d", mb.empty_count.value);
+  asm("xchg %bx, %bx");
   semaphore_down(&mb.full_count);
-  lock_acquire(&mb.lock);
+  //lock_acquire(&mb.lock);
   bcopy(mb.messages[mb.start].msg, msg, nbytes);
   mb.start = (mb.start + 1) % BUFFER_LENGTH;
-  lock_release(&mb.lock);
+  //lock_release(&mb.lock);
   semaphore_up(&mb.empty_count);
+  printf(10, 0, "%d", mb.full_count.value);
+  printf(11, 0, "%d", mb.empty_count.value);
+  asm("xchg %bx, %bx");
 }
 
 /* Returns the number of processes that have
