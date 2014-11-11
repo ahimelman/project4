@@ -62,7 +62,6 @@ void LittleJohn(void)
   {
     pid_t aramis;
     mbox_recv(sub, &aramis, sizeof(pid_t));
-    ASSERT(0);
     printf(2,1, "Little John(%d): and give to the poor!         ", myPid);
 
     wait(aramis);
