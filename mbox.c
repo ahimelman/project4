@@ -2,12 +2,14 @@
 #include "mbox.h"
 #include "sync.h"
 #include "util.h"
+#include "queue.h"
 
 #define BUFFER_LENGTH (MAX_MBOX_LENGTH + 1)
 
 typedef struct
 {
   // Fill this in
+  node_t node;
   char msg[MAX_MESSAGE_LENGTH];
 } Message;
 
@@ -16,11 +18,12 @@ typedef struct
   char name[MBOX_NAME_LENGTH];
   // Fill this in
   int usage_count;
-  Message messages[BUFFER_LENGTH];
-  int start, end;
+  Message message_queue;
+  //int start, end;
   semaphore_t full_count;
   semaphore_t empty_count;
   lock_t lock;
+  int message_count;
 } MessageBox;
 
 
@@ -36,9 +39,8 @@ void init_mbox(void)
   (void) MessageBoxen;
   // Fill this in
   for (i = 0; i < MAX_MBOXEN; i++) {
-    MessageBoxen[i].usage_count = 0; 
-    MessageBoxen[i].start = 0; 
-    MessageBoxen[i].end = 0;
+    MessageBoxen[i].usage_count = 0;
+    queue_init((node_t*)&MessageBoxen[i].message_queue);
     semaphore_init(&MessageBoxen[i].full_count, 0);
     semaphore_init(&MessageBoxen[i].empty_count, MAX_MBOX_LENGTH);
     lock_init(&MessageBoxen[i].lock); 
@@ -102,7 +104,7 @@ int do_mbox_is_full(mbox_t mbox)
 {
   (void)mbox;
   // fill this in
-  return ((MessageBoxen[mbox].end + 1) % BUFFER_LENGTH) == MessageBoxen[mbox].start;
+  return (MessageBoxen[mbox].message_count >= MAX_MBOX_LENGTH);
 }
 
 /* Enqueues a message onto
@@ -123,11 +125,14 @@ void do_mbox_send(mbox_t mbox, void *msg, int nbytes)
   (void)msg;
   (void)nbytes;
   // fill this in
+  Message m;
+
   MessageBox mb = MessageBoxen[mbox];
   semaphore_down(&mb.empty_count);
-  lock_acquire(&mb.lock);
-  bcopy(msg, mb.messages[mb.end].msg, nbytes);
-  mb.end = (mb.end + 1) % BUFFER_LENGTH;
+  lock_acquire(&mb.lock); 
+  bcopy(msg, m.msg, nbytes);
+  queue_put((node_t*)(&mb.message_queue), (node_t*)&m);
+  mb.message_count++;
   lock_release(&mb.lock);
   semaphore_up(&mb.full_count);
 }
@@ -151,13 +156,15 @@ void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
   (void)mbox;
   (void)msg;
   (void)nbytes;
+  Message* m;
   // fill this in
   MessageBox mb = MessageBoxen[mbox];
   //asm("xchg %bx, %bx");
   semaphore_down(&mb.full_count);
   lock_acquire(&mb.lock);
-  bcopy(mb.messages[mb.start].msg, msg, nbytes);
-  mb.start = (mb.start + 1) % BUFFER_LENGTH;
+  m = (Message*)queue_get((node_t*)&mb.message_queue);
+  bcopy(m->msg, msg, nbytes);
+  mb.message_count--;
   lock_release(&mb.lock);
   semaphore_up(&mb.empty_count);
 }
