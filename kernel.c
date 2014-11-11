@@ -10,6 +10,7 @@
 #include "mbox.h"
 #include "ramdisk.h"
 #include "keyboard.h"
+#include "sync.h"
 
 pcb_t pcb[NUM_PCBS];
 
@@ -100,6 +101,7 @@ static void initialize_pcb(pcb_t *p, pid_t pid, struct task_info *ti)
     p->sleep_until = 0;
     p->total_process_time = 0;
     p->waiting_for_lock = NULL;
+    condition_init(&p->condition);
 
     switch (ti->task_type) {
     case KERNEL_THREAD:
@@ -451,6 +453,10 @@ static int do_wait(pid_t pid)
 {
   (void) pid;
   // todo: fill this in
-  return -1;
+  lock_t l;
+  lock_init(&l);
+  condition_wait(&l, &(pcb[pid].condition));
+  printf(10,0, "after condition wait");
+  return 0;
 }
 

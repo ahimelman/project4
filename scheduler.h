@@ -6,7 +6,7 @@
 
 #include "common.h"
 #include "queue.h"
-
+#include "sync.h"
 
 typedef enum {
     KERNEL_THREAD,
@@ -65,6 +65,8 @@ typedef struct pcb {
 
     /* For deadlock detection */
     struct lock * waiting_for_lock;
+    
+    condition_t condition;
 } pcb_t;
 
 extern priority_t total_ready_priority;
